@@ -9,7 +9,6 @@ def match(imgA,imgB,func):
 
     bf = cv2.BFMatcher()
     matches = bf.knnMatch(des1,des2, k=2)
-    #matches = sorted(matches, key = lambda x:x.distance)
 
     good = []
     good_without_list = []
@@ -27,8 +26,9 @@ def match(imgA,imgB,func):
 
     H, masked = cv2.findHomography(src, dst, cv2.RANSAC, 5.0)
     print(H)
-    dst = cv2.warpPerspective(imgA,H,(imgB.shape[1] + imgB.shape[1], imgB.shape[0]))
+    dst = cv2.warpPerspective(imgA,H,(imgB.shape[1] + imgA.shape[1], imgB.shape[0]))
     
+    dst[0:imgA.shape[0], 0:imgA.shape[1]] = imgB
     return imMatches,dst
 
 def brief_match(imgA,imgB):
