@@ -2,9 +2,6 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-
-
 def match(imgA,imgB,func):
     
     kp1, des1 = func.detectAndCompute(imgA,None)
@@ -21,9 +18,16 @@ def match(imgA,imgB,func):
         if m.distance < 0.75 * n.distance:
             good.append([m])
             good_without_list.append(m)
-    imMatches = cv2.drawMatchesKnn(imgA,kp1,imgB,kp2,matches,None,flags=2)
-    #dst = cv2.warpPerspective(imgA,H,(imgB.shape[1] + imgB.shape[1], imgB.shape[0]))
-    dst = None
+    imMatches = cv2.drawMatchesKnn(imgB,kp2,imgA,kp1,good,None,flags=2)
+
+    match = np.asarray(good)
+    if len(match[:,0]) >= 4:
+        src = np.float32([ kp1[m.queryIdx].pt for m in match[:,0] ]).reshape(-1,1,2)
+        dst = np.float32([ kp2[m.trainIdx].pt for m in match[:,0] ]).reshape(-1,1,2)
+
+    H, masked = cv2.findHomography(src, dst, cv2.RANSAC, 5.0)
+    print(H)
+    dst = cv2.warpPerspective(imgA,H,(imgB.shape[1] + imgB.shape[1], imgB.shape[0]))
     
     return imMatches,dst
 
