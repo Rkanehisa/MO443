@@ -52,30 +52,38 @@ def brief_match(imgA,imgB):
             good.append([m])
             good_without_list.append(m)
     imMatches = cv2.drawMatchesKnn(imgA,kp1,imgB,kp2,matches,None,flags=2)
-    #dst = cv2.warpPerspective(imgA,H,(imgB.shape[1] + imgB.shape[1], imgB.shape[0]))
-    dst = None
     
+    match = np.asarray(good)
+    if len(match[:,0]) >= 4:
+        src = np.float32([ kp1[m.queryIdx].pt for m in match[:,0] ]).reshape(-1,1,2)
+        dst = np.float32([ kp2[m.trainIdx].pt for m in match[:,0] ]).reshape(-1,1,2)
+
+    H, masked = cv2.findHomography(src, dst, cv2.RANSAC, 5.0)
+    print(H)
+    dst = cv2.warpPerspective(imgA,H,(imgB.shape[1] + imgA.shape[1], imgB.shape[0]))
+    
+    dst[0:imgA.shape[0], 0:imgA.shape[1]] = imgB
     return imMatches,dst
     
 
 imgA = cv2.imread("img/foto1A.jpg")
 imgB = cv2.imread("img/foto1B.jpg")
 
-sift = cv2.xfeatures2d.SIFT_create()
-surf = cv2.xfeatures2d.SURF_create()
+#sift = cv2.xfeatures2d.SIFT_create()
+#surf = cv2.xfeatures2d.SURF_create()
 
 orb = cv2.ORB_create()
-#imMatches,dst =  match(imgA,imgB,orb)
-imMatches,dst = brief_match(imgA,imgB)
-#cv2.imwrite("matches.jpg", imMatches)
-plt.imshow(imMatches)
+imMatches,dst =  match(imgA,imgB,orb)
+#imMatches,dst = brief_match(imgA,imgB)
+cv2.imwrite("matches.jpg", imMatches)
+plt.imshow(np.flip(imMatches, axis=2))
 plt.show()
 cv2.waitKey()
 cv2.destroyAllWindows()
 
-"""
 cv2.imwrite("output.jpg",dst)
-plt.imshow(dst)
+plt.imshow(np.flip(dst, axis=2))
 plt.show()
-cv2.
-"""
+cv2.waitKey()
+cv2.destroyAllWindows()
+
